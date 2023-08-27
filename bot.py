@@ -85,9 +85,8 @@ def process_name_for_donation(message):
 
 def process_location_for_donation(message):
     chat_id = message.chat.id
-    user_location = message.location
-    user_selection_data[chat_id]['latitude'] = user_location.latitude
-    user_selection_data[chat_id]['longitude'] = user_location.longitude
+    location_text = message.text  # User enters location as text
+    user_selection_data[chat_id]['location'] = location_text
 
     msg = bot.send_message(chat_id, "Enter your mobile number:")
     bot.register_next_step_handler(msg, process_mobile_number_for_donation)
