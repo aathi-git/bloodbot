@@ -96,7 +96,6 @@ def process_mobile_number_for_donation(message):
     chat_id = message.chat.id
     mobile_number = message.text
     user_selection_data[chat_id]['mobile_number'] = mobile_number
-
     # Save user data to the list.txt file
     blood_group = user_selection_data[chat_id]['blood_group']
     name = user_selection_data[chat_id]['name']
