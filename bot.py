@@ -1,6 +1,5 @@
 import telebot
 from telebot import types
-from flask import Flask, request
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token obtained from BotFather on Telegram
 bot = telebot.TeleBot('6502481073:AAFJbvGP7lz_XVHv5OdNatrEbab7WmmVAMM')
@@ -171,22 +170,6 @@ def process_selected_donor(message):
 while True:
     try:
         bot.polling(none_stop=True, interval=0)
-
-# Create a Flask web app
-app = Flask(__name__)
-
-@app.route('/')
-def hello():
-    return "Hello, this is your Telegram bot."
-
-@app.route('/' + TOKEN, methods=['POST'])
-def webhook():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "OK", 200
-
-# Run the Flask app
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
     except Exception as e:
         print(f"An error occurred: {e}")
         # Add any additional logging or error handling here
