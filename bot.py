@@ -1,9 +1,24 @@
+import os
 import telebot
 from telebot import types
 from math import radians, sin, cos, sqrt, atan2
+from flask import Flask, request
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token obtained from BotFather on Telegram
 bot = telebot.TeleBot('6502481073:AAFJbvGP7lz_XVHv5OdNatrEbab7WmmVAMM')
+
+server = Flask(__name__)
+
+@server.route('/' + bot.token, methods=['POST'])
+def get_message():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://your-heroku-app-url.herokuapp.com/' + bot.token)
+    return "!", 200
 
 # A dictionary to store donor data (replace with a database in a real implementation)
 donors = {}
@@ -185,3 +200,5 @@ while True:
         print(f"An error occurred: {e}")
         # Add any additional logging or error handling here
 
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
