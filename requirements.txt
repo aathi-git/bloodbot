@@ -1,4 +1,5 @@
 flask==2.0.1
 requests==2.26.0
 pyTelegramBotAPI==3.8.1
+telebot==1.0.5
 # Add more dependencies as needed
