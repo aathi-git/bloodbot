@@ -1,5 +1,6 @@
 import telebot
 from telebot import types
+from math import radians, sin, cos, sqrt, atan2
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token obtained from BotFather on Telegram
 bot = telebot.TeleBot('6502481073:AAFJbvGP7lz_XVHv5OdNatrEbab7WmmVAMM')
@@ -69,8 +70,9 @@ def process_name_for_donation(message):
 
 def process_location_for_donation(message):
     chat_id = message.chat.id
-    location = message.text
-    user_selection_data[chat_id]['location'] = location
+    user_location = message.location
+    user_selection_data[chat_id]['latitude'] = user_location.latitude
+    user_selection_data[chat_id]['longitude'] = user_location.longitude
 
     msg = bot.send_message(chat_id, "Enter your mobile number:")
     bot.register_next_step_handler(msg, process_mobile_number_for_donation)
@@ -126,29 +128,38 @@ def process_blood_type_for_finder(message):
 
 def process_location_for_finder(message):
     chat_id = message.chat.id
-    location = message.text
-    user_selection_data[chat_id]['location'] = location
+    location = message.location
+    user_selection_data[chat_id]['latitude'] = location.latitude
+    user_selection_data[chat_id]['longitude'] = location.longitude
     display_matching_donors(chat_id)
-
-def display_matching_donors(chat_id):
-    donors_list = load_donors()
-    donor_info = user_selection_data[chat_id]
-    blood_type = donor_info['blood_type']
-    location = donor_info['location']
     
-    matching_donors = [
-        donor for donor in donors_list if (
-            donor.split(',')[1] == blood_type and 
-            donor.split(',')[2] == location
-        )
-    ]
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371.0  # Radius of the Earth in kilometers
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c
+    return distance
+
+def display_matching_donors(chat_id, max_distance=10.0):  # Set the maximum distance as needed
+    donors_list = load_donors()
+    user_info = user_selection_data[chat_id]
+    user_latitude = user_info['latitude']
+    user_longitude = user_info['longitude']
+    
+    matching_donors = []
+    for donor in donors_list:
+        donor_info = donor.split(',')
+        donor_latitude = float(donor_info[2])  # Assuming location is stored at index 2
+        donor_longitude = float(donor_info[3])  # Assuming mobile number is stored at index 3
+        distance = haversine_distance(user_latitude, user_longitude, donor_latitude, donor_longitude)
+        
+        if distance <= max_distance:
+            matching_donors.append(donor)
     
     if matching_donors:
-        markup = types.ReplyKeyboardMarkup(row_width=1)
-        donor_buttons = [types.KeyboardButton(f"{donor.split(',')[0]} ({donor.split(',')[1]})") for donor in matching_donors]
-        markup.add(*donor_buttons)
-        msg = bot.send_message(chat_id, "Select a donor:", reply_markup=markup)
-        bot.register_next_step_handler(msg, process_selected_donor)  # This line was missing in the provided code
+        # Display the matching donors
     else:
         response = "No matching donors found."
         bot.send_message(chat_id, response)
