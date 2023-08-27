@@ -158,25 +158,29 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 def display_matching_donors(chat_id, max_distance=10.0):
     donors_list = load_donors()
     user_info = user_selection_data[chat_id]
+    
+    # Check if user's location data exists
+    if 'latitude' not in user_info or 'longitude' not in user_info:
+        bot.send_message(chat_id, "Your location data is missing.")
+        display_main_menu(chat_id)
+        return
+    
     user_latitude = user_info['latitude']
     user_longitude = user_info['longitude']
     
     matching_donors = []
     for donor in donors_list:
         donor_info = donor.split(',')
-        donor_latitude = float(donor_info[2])  # Assuming location is stored at index 2
-        donor_longitude = float(donor_info[3])  # Assuming mobile number is stored at index 3
-        distance = haversine_distance(user_latitude, user_longitude, donor_latitude, donor_longitude)
-        
-        if distance <= max_distance:
-            matching_donors.append(donor)
+        if len(donor_info) >= 4:  # Ensure enough data exists
+            donor_latitude = float(donor_info[2])
+            donor_longitude = float(donor_info[3])
+            distance = haversine_distance(user_latitude, user_longitude, donor_latitude, donor_longitude)
+            
+            if distance <= max_distance:
+                matching_donors.append(donor)
     
     if matching_donors:
-        markup = types.ReplyKeyboardMarkup(row_width=1)
-        donor_buttons = [types.KeyboardButton(f"{donor.split(',')[0]} ({donor.split(',')[1]})") for donor in matching_donors]
-        markup.add(*donor_buttons)
-        msg = bot.send_message(chat_id, "Select a donor:", reply_markup=markup)
-        bot.register_next_step_handler(msg, process_selected_donor)
+        # Display the matching donors...
     else:
         response = "No matching donors found."
         bot.send_message(chat_id, response)
