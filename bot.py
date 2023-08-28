@@ -155,6 +155,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
+
 def display_matching_donors(chat_id, max_distance=10.0):
     donors_list = load_donors()
     user_info = user_selection_data[chat_id]
@@ -180,7 +181,11 @@ def display_matching_donors(chat_id, max_distance=10.0):
                 matching_donors.append(donor)
     
     if matching_donors:
-        # Display the matching donors...
+        markup = types.ReplyKeyboardMarkup(row_width=1)
+        donor_buttons = [types.KeyboardButton(f"{donor.split(',')[0]} ({donor.split(',')[1]})") for donor in matching_donors]
+        markup.add(*donor_buttons)
+        msg = bot.send_message(chat_id, "Select a donor:", reply_markup=markup)
+        bot.register_next_step_handler(msg, process_selected_donor)
     else:
         response = "No matching donors found."
         bot.send_message(chat_id, response)
